@@ -2,6 +2,7 @@
 using ClinicaSorrisoEntity.Models;
 using ClinicaSorrisoEntity.Services;
 using ClinicaSorrisoEntity.Views;
+using Microsoft.Data.SqlClient;
 
 namespace ClinicaSorrisoEntity.Controllers
 {
@@ -44,7 +45,6 @@ namespace ClinicaSorrisoEntity.Controllers
                         ConsultaView.MenuAgenda();
                         break;
                 }
-
             }
         }
 
@@ -53,40 +53,47 @@ namespace ClinicaSorrisoEntity.Controllers
         {
             using (var repo = new ConsultaService())
             {
-                var pacienteExistente = repo.ConsultarPacientePorCPF(PacienteView.ConsultarCpf());
-
-                if (pacienteExistente is null)
+                try
                 {
-                    PacienteView.MensagemErro("paciente não cadastrado.");
-                    return;
+                    var pacienteExistente = repo.ConsultarPacientePorCPF(PacienteView.ConsultarCpf());
+
+                    if (pacienteExistente is null)
+                    {
+                        PacienteView.MensagemErro("paciente não cadastrado.");
+                        return;
+                    }
+
+                    if (pacienteExistente.TemConsultaFutura())
+                    {
+                        string mensagemErro = $" o paciente já possui consulta marcada para " +
+                            $"{pacienteExistente.ConsultaMarcada.Data:dd/MM/yyyy} as " +
+                            $"{pacienteExistente.ConsultaMarcada.GetHorario(pacienteExistente.ConsultaMarcada.HoraInicio)}h";
+
+                        PacienteView.MensagemErro(mensagemErro);
+                        return;
+                    }
+
+                    var dadosConsulta = ConsultaView.ObterDadosConsulta();
+
+                    var novaConsulta = new CreateConsultaDTO(pacienteExistente,
+                                                    DateTime.Parse(dadosConsulta.DataConsulta),
+                                                    dadosConsulta.HoraInicio,
+                                                    dadosConsulta.HoraFim);
+
+                    if (repo.TemConflitoDeHorario(novaConsulta))
+                    {
+                        PacienteView.MensagemErro("já existe uma consulta agendada nesta data/hora.");
+                        return;
+                    }
+                    else
+                    {
+                        repo.CadastrarConsulta(novaConsulta);
+                        ConsultaView.AgendamentoRealizado();
+                    }
                 }
-
-                if (pacienteExistente.TemConsultaFutura())
+                catch (SqlException ex)
                 {
-                    string mensagemErro = $" o paciente já possui consulta marcada para " +
-                        $"{pacienteExistente.ConsultaMarcada.Data:dd/MM/yyyy} as " +
-                        $"{pacienteExistente.ConsultaMarcada.GetHorario(pacienteExistente.ConsultaMarcada.HoraInicio)}h";
-
-                    PacienteView.MensagemErro(mensagemErro);
-                    return;
-                }
-
-                var dadosConsulta = ConsultaView.ObterDadosConsulta();
-
-                var novaConsulta = new CreateConsultaDTO(pacienteExistente,
-                                                DateTime.Parse(dadosConsulta.DataConsulta),
-                                                dadosConsulta.HoraInicio,
-                                                dadosConsulta.HoraFim);
-
-                if (repo.TemConflitoDeHorario(novaConsulta))
-                {
-                    PacienteView.MensagemErro("já existe uma consulta agendada nesta data/hora.");
-                    return;
-                }
-                else
-                {
-                    repo.CadastrarConsulta(novaConsulta);
-                    ConsultaView.AgendamentoRealizado();
+                    ConsultaView.MensagemErro(ex.Message);
                 }
             }
         }
@@ -96,29 +103,36 @@ namespace ClinicaSorrisoEntity.Controllers
         {
             using(var repo = new ConsultaService())
             {
-                var pacienteExistente = repo.ConsultarPacientePorCPF(PacienteView.ConsultarCpf());
-                if (pacienteExistente is null)
+                try
                 {
-                    PacienteView.MensagemErro("paciente não cadastrado.");
-                    return;
+                    var pacienteExistente = repo.ConsultarPacientePorCPF(PacienteView.ConsultarCpf());
+                    if (pacienteExistente is null)
+                    {
+                        PacienteView.MensagemErro("paciente não cadastrado.");
+                        return;
+                    }
+
+                    var dadosConsulta = ConsultaView.ObterDadosConsulta();
+
+                    var consultaExcluir = new Consulta(pacienteExistente,
+                                                    DateTime.Parse(dadosConsulta.DataConsulta),
+                                                    dadosConsulta.HoraInicio,
+                                                    dadosConsulta.HoraFim);
+
+                    var consultaExistente = repo.BuscarConsulta(consultaExcluir);
+
+                    if (consultaExistente is null)
+                    {
+                        ConsultaView.MensagemErro("agendamento não encontrado.");
+                        return;
+                    }
+                    repo.ExcluirConsulta(consultaExistente);
+                    ConsultaView.ConsultaExcluida();
                 }
-
-                var dadosConsulta = ConsultaView.ObterDadosConsulta();
-
-                var consultaExcluir = new Consulta(pacienteExistente,
-                                                DateTime.Parse(dadosConsulta.DataConsulta),
-                                                dadosConsulta.HoraInicio,
-                                                dadosConsulta.HoraFim);
-
-                var consultaExistente = repo.BuscarConsulta(consultaExcluir);
-
-                if (consultaExistente is null)
+                catch (SqlException ex)
                 {
-                    ConsultaView.MensagemErro("agendamento não encontrado.");
-                    return;
-                }
-                repo.ExcluirConsulta(consultaExistente);
-                ConsultaView.ConsultaExcluida();
+                    ConsultaView.MensagemErro(ex.Message);
+                } 
             }
         }
 
@@ -127,20 +141,27 @@ namespace ClinicaSorrisoEntity.Controllers
         {
             using(var repo = new ConsultaService())
             {
-                var opcaoListagem = ConsultaView.ObterOpcaoListagem();
-                Console.Clear();
-                if (opcaoListagem == 'T' || opcaoListagem == 't')
+                try
                 {
-                    ConsultaView.ListarAgenda(repo.ListarConsultasPorData());
+                    var opcaoListagem = ConsultaView.ObterOpcaoListagem();
+                    Console.Clear();
+                    if (opcaoListagem == 'T' || opcaoListagem == 't')
+                    {
+                        ConsultaView.ListarAgenda(repo.ListarConsultasPorData());
+                    }
+                    if (opcaoListagem == 'P' || opcaoListagem == 'p')
+                    {
+                        var datasPeriodo = ConsultaView.ObterPeriodoListagem();
+                        ConsultaView.ListarAgenda(repo.ListarConsultasPorPeriodo(datasPeriodo[0], datasPeriodo[1]));
+                    }
+                    else
+                    {
+                        Console.WriteLine();
+                    }
                 }
-                if (opcaoListagem == 'P' || opcaoListagem == 'p')
+                catch (SqlException ex)
                 {
-                    var datasPeriodo = ConsultaView.ObterPeriodoListagem();
-                    ConsultaView.ListarAgenda(repo.ListarConsultasPorPeriodo(datasPeriodo[0], datasPeriodo[1]));
-                }
-                else
-                {
-                    Console.WriteLine();
+                    ConsultaView.MensagemErro(ex.Message);
                 }
             }          
         }

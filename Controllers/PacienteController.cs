@@ -1,6 +1,7 @@
 ﻿using System;
 using ClinicaSorrisoEntity.Services;
 using ClinicaSorrisoEntity.Views;
+using Microsoft.Data.SqlClient;
 
 namespace ClinicaSorrisoEntity.Controllers
 {
@@ -21,31 +22,31 @@ namespace ClinicaSorrisoEntity.Controllers
                 var opcao = Console.ReadKey();
                 switch (opcao.KeyChar)
                 {
-                case '1':
-                    Console.Clear();
-                    Cadastrar();
-                    break;
-                case '2':
-                    Console.Clear();
-                    Excluir();
-                    break;
-                case '3':
-                    Console.Clear();
-                    ListarPorCpf();
-                    break;
-                case '4':
-                    Console.Clear();
-                    ListarPorNome();
-                    break;
-                case '5':                                               
-                    Console.Clear();
-                    MenuView.MenuPrincipal();
-                    exit = true;
-                    break;
-                default:
-                    Console.Clear();
-                    PacienteView.MenuPaciente();
-                    break;
+                    case '1':
+                        Console.Clear();
+                        Cadastrar();
+                        break;
+                    case '2':
+                        Console.Clear();
+                        Excluir();
+                        break;
+                    case '3':
+                        Console.Clear();
+                        ListarPorCpf();
+                        break;
+                    case '4':
+                        Console.Clear();
+                        ListarPorNome();
+                        break;
+                    case '5':
+                        Console.Clear();
+                        MenuView.MenuPrincipal();
+                        exit = true;
+                        break;
+                    default:
+                        Console.Clear();
+                        PacienteView.MenuPaciente();
+                        break;
                 }
 
             }
@@ -55,7 +56,7 @@ namespace ClinicaSorrisoEntity.Controllers
         // Executa a lógica de cadastro de um paciente
         public void Cadastrar()
         {
-            using(var repo = new PacienteService())
+            using (var repo = new PacienteService())
             {
                 try
                 {
@@ -70,8 +71,11 @@ namespace ClinicaSorrisoEntity.Controllers
                 {
                     PacienteView.MensagemErro(ex.Message);
                 }
+                catch (SqlException ex)
+                {
+                    PacienteView.MensagemErro(ex.Message);
+                }
             }
-           
         }
 
         // Executa a lógica de exclusão de um paciente de acordo com o CPF informado
@@ -79,13 +83,17 @@ namespace ClinicaSorrisoEntity.Controllers
         {
             using (var repo = new PacienteService())
             {
-                var pacienteSalvo = repo.ConsultarPacientePorCPF(PacienteView.ConsultarCpf());
                 try
                 {
+                    var pacienteSalvo = repo.ConsultarPacientePorCPF(PacienteView.ConsultarCpf());
                     repo.ExcluirPaciente(pacienteSalvo);
                     PacienteView.PacienteExcluido();
                 }
                 catch (ApplicationException ex)
+                {
+                    PacienteView.MensagemErro(ex.Message);
+                }
+                catch (SqlException ex)
                 {
                     PacienteView.MensagemErro(ex.Message);
                 }
@@ -95,18 +103,32 @@ namespace ClinicaSorrisoEntity.Controllers
         // Obtém a lista de pacientes ordenadas por CPF do repositório e envia para ser exibida na PacienteView
         public void ListarPorCpf()
         {
-            using(var repo = new PacienteService())
+            try
             {
-                PacienteView.ListarPacientes(repo.ListarPacientesPorCPF());
+                using (var repo = new PacienteService())
+                {
+                    PacienteView.ListarPacientes(repo.ListarPacientesPorCPF());
+                }
+            }
+            catch (SqlException ex)
+            {
+                PacienteView.MensagemErro(ex.Message);
             }
         }
 
         // Obtém a lista de pacientes ordenadas por Nome do repositório e envia para ser exibida na PacienteView
         public void ListarPorNome()
         {
-            using (var repo = new PacienteService())
+            try
             {
-                PacienteView.ListarPacientes(repo.ListarPacientesPorNome());
+                using (var repo = new PacienteService())
+                {
+                    PacienteView.ListarPacientes(repo.ListarPacientesPorNome());
+                }
+            }
+            catch (SqlException ex)
+            {
+                PacienteView.MensagemErro(ex.Message);
             }
         }
     }

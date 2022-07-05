@@ -25,9 +25,9 @@ namespace ClinicaSorrisoEntity.Dados.DAO
                 _contexto.Consultas.Add(consulta);
                 _contexto.SaveChanges();
             }
-            catch (SqlException e)
+            catch (SqlException)
             {
-                Console.WriteLine($"Error:{e.Message}");
+                throw;
             }
         }
 
@@ -39,22 +39,35 @@ namespace ClinicaSorrisoEntity.Dados.DAO
                 _contexto.Consultas.Remove(entity);
                 _contexto.SaveChanges();
             }
-            catch (SqlException e)
+            catch (SqlException)
             {
-
-                Console.WriteLine($"Error: {e.Message}");
+                throw;
             }
         }
 
         // Retorna uma lista com todas as consultas da base de consultas
         public IList<Consulta> ListarConsulta()
         {
-            return _contexto.Consultas.ToList();
+            try
+            {
+                return _contexto.Consultas.ToList();
+            }
+            catch (SqlException)
+            {
+                throw;
+            }
         }
 
         public IList<Paciente> ListarPacientes()
         {
-            return _contexto.Pacientes.ToList();
+            try
+            {
+                return _contexto.Pacientes.ToList();
+            }
+            catch (SqlException)
+            {
+                throw;
+            }
         }
 
         public void Dispose()

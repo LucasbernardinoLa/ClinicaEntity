@@ -1,9 +1,7 @@
 ﻿using ClinicaSorrisoEntity.Dados.DAO;
 using ClinicaSorrisoEntity.Dados.DTOs;
 using ClinicaSorrisoEntity.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Microsoft.Data.SqlClient;
 
 namespace ClinicaSorrisoEntity.Services
 {
@@ -18,36 +16,71 @@ namespace ClinicaSorrisoEntity.Services
 
         public Paciente ConsultarPacientePorCPF(string cpf)
         {
-            return _consultaDAO.ListarPacientes().Where(p => p.Cpf == cpf)
+            try
+            {
+                return _consultaDAO.ListarPacientes().Where(p => p.Cpf == cpf)
                                                  .SingleOrDefault();
+            }
+            catch (SqlException)
+            {
+                throw;
+            }
         }
 
         // Recebe uma consulta e salva no repositorio
         public void CadastrarConsulta(CreateConsultaDTO consulta)
         {
-            _consultaDAO.SalvarConsulta(consulta);
+            try
+            {
+                _consultaDAO.SalvarConsulta(consulta);
+            }
+            catch (SqlException)
+            {
+                throw;
+            }
         }
 
         // Recebe uma consulta e exclui do repositorio
         public void ExcluirConsulta(Consulta consulta)
         {
-            _consultaDAO.DeletarConsulta(consulta);
+            try
+            {
+                _consultaDAO.DeletarConsulta(consulta);
+            }
+            catch (SqlException)
+            {
+                throw;
+            }
         }
 
         //Retorna uma lista com todas as consultas do repositorio ordenadas por data
         public List<Consulta> ListarConsultasPorData()
         {
-            return _consultaDAO.ListarConsulta()
+            try
+            {
+                return _consultaDAO.ListarConsulta()
                                .OrderBy(c => c.Data)
                                .ToList();
+            }
+            catch (SqlException)
+            {
+                throw;
+            }
         }
 
         //Recebe uma data e retorna uma lista com todas as consultas agendadas para este dia
         public List<Consulta> ListarConsultasDoDia(DateTime dataAgendamento)
         {
-            return _consultaDAO.ListarConsulta()
+            try
+            {
+                return _consultaDAO.ListarConsulta()
                                .Where(c => c.Data.Date == dataAgendamento.Date)
                                .ToList();
+            }
+            catch (SqlException)
+            {
+                throw;
+            }
         }
 
         //Recebe uma consulta e retorna se há conflito de horário desta consulta com as demais consultas do mesmo dia
@@ -76,20 +109,34 @@ namespace ClinicaSorrisoEntity.Services
         //Recebe uma data inicial e final e retorna uma lista com todas as consultas agendadas nesse periodo
         public List<Consulta> ListarConsultasPorPeriodo(DateTime dtInicio, DateTime dtFim)
         {
-            return _consultaDAO.ListarConsulta()
+            try
+            {
+                return _consultaDAO.ListarConsulta()
                                .Where(consulta => (consulta.Data.Date >= dtInicio.Date) &
                                                    consulta.Data.Date <= dtFim.Date)
                                .ToList();
+            }
+            catch (SqlException)
+            {
+                throw;
+            }
         }
 
         //Recebe uma consulta e caso exista no repositorio, retorna ela
         public Consulta BuscarConsulta(Consulta consulta)
         {
-            return _consultaDAO.ListarConsulta()
+            try
+            {
+                return _consultaDAO.ListarConsulta()
                                .Where(c => c.Paciente.Cpf == consulta.Paciente.Cpf &
                                c.Data.Date == consulta.Data.Date &
                                c.HoraInicio == consulta.HoraInicio)
                                .SingleOrDefault();
+            }
+            catch (SqlException)
+            {
+                throw;
+            }
         }
         public void Dispose()
         {

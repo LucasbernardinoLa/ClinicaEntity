@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using ClinicaSorrisoEntity.Dados.DAO;
+﻿using ClinicaSorrisoEntity.Dados.DAO;
 using ClinicaSorrisoEntity.Dados.DTOs;
 using ClinicaSorrisoEntity.Models;
+using Microsoft.Data.SqlClient;
 
 namespace ClinicaSorrisoEntity.Services
 {
@@ -20,53 +18,88 @@ namespace ClinicaSorrisoEntity.Services
         // Recebe um paciente e verifica de acordo com as regras de negócio se o cadastro pode ou não ser realizado
         public void CadastrarPaciente(CreatePacienteDTO pacienteDTO)
         {
-            var existePaciente = ConsultarPacientePorCPF(pacienteDTO.Cpf);
-
-            if (existePaciente != null)
+            try
             {
-                throw new ArgumentException("CPF já cadastrado.");
-            }
+                var existePaciente = ConsultarPacientePorCPF(pacienteDTO.Cpf);
 
-            if (pacienteDTO.Idade < 13)
-            {
-                throw new ApplicationException($"paciente só tem {pacienteDTO.Idade} anos.");
+                if (existePaciente != null)
+                {
+                    throw new ArgumentException("CPF já cadastrado.");
+                }
+
+                if (pacienteDTO.Idade < 13)
+                {
+                    throw new ApplicationException($"paciente só tem {pacienteDTO.Idade} anos.");
+                }
+                _pacientesDAO.SalvarPaciente(pacienteDTO);
             }
-            _pacientesDAO.SalvarPaciente(pacienteDTO);
+            catch (SqlException)
+            {
+                throw;
+            }
         }
 
         // Recebe um paciente e verifica de acordo com as regras de negócio se o paciente pode ou não ser excluído
         public void ExcluirPaciente(Paciente paciente)
         {
-            if (paciente == null)
+            try
             {
-                throw new ApplicationException("paciente não cadastrado.");
-            }
+                if (paciente == null)
+                {
+                    throw new ApplicationException("paciente não cadastrado.");
+                }
 
-            if (paciente.TemConsultaFutura())
-            {
-                throw new ApplicationException($"paciente está agendado para {paciente.ConsultaMarcada.Data:dd/MM/yyyy} as {paciente.ConsultaMarcada.GetHorario(paciente.ConsultaMarcada.HoraInicio)}h.");
+                if (paciente.TemConsultaFutura())
+                {
+                    throw new ApplicationException($"paciente está agendado para {paciente.ConsultaMarcada.Data:dd/MM/yyyy} as {paciente.ConsultaMarcada.GetHorario(paciente.ConsultaMarcada.HoraInicio)}h.");
+                }
+                _pacientesDAO.DeletarPaciente(paciente);
             }
-            _pacientesDAO.DeletarPaciente(paciente);
+            catch (SqlException)
+            {
+                throw;
+            }
         }
 
         // Recebe um CPF e retorna um paciente, caso caso o mesmo esteja cadastrado na base de pacientes
         public Paciente ConsultarPacientePorCPF(string cpf)
         {
-            return _pacientesDAO.ListarPacientes()
+            try
+            {
+                return _pacientesDAO.ListarPacientes()
                        .Where(p => p.Cpf == cpf)
                        .SingleOrDefault();
+            }
+            catch (SqlException)
+            {
+                throw;
+            }
         }
 
         // Retorna uma lista da base de pacientes ordenada por CPF
         public List<Paciente> ListarPacientesPorCPF()
         {
-            return _pacientesDAO.ListarPacientes().OrderBy(p => p.Cpf).ToList();
+            try
+            {
+                return _pacientesDAO.ListarPacientes().OrderBy(p => p.Cpf).ToList();
+            }
+            catch (SqlException)
+            {
+                throw;
+            }
         }
 
         // Retorna uma lista da base de pacientes ordenada por Nome
         public List<Paciente> ListarPacientesPorNome()
         {
-            return _pacientesDAO.ListarPacientes().OrderBy(p => p.Nome).ToList();
+            try
+            {
+                return _pacientesDAO.ListarPacientes().OrderBy(p => p.Nome).ToList();
+            }
+            catch (SqlException)
+            {
+                throw;
+            }
         }
 
         public void Dispose()

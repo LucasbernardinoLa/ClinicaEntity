@@ -23,9 +23,9 @@ namespace ClinicaSorrisoEntity.Dados.DAO
                 _contexto.Pacientes.Remove(paciente);
                 _contexto.SaveChanges();
             }
-            catch (SqlException e)
+            catch (SqlException)
             {
-                Console.WriteLine($"Error: {e.Message}");
+                throw;
             }
         }
 
@@ -37,7 +37,14 @@ namespace ClinicaSorrisoEntity.Dados.DAO
         // Retorna uma lista com dos os pacientes da base de pacientes
         public IList<Paciente> ListarPacientes()
         {
-            return _contexto.Pacientes.ToList();
+            try
+            {
+                return _contexto.Pacientes.ToList();
+            }
+            catch(SqlException)
+            {
+                throw;
+            }
         }
 
         // Recebe um paciente e salva na base de pacientes
@@ -50,9 +57,9 @@ namespace ClinicaSorrisoEntity.Dados.DAO
                 _contexto.Pacientes.Add(paciente);
                 _contexto.SaveChanges();
             }
-            catch (SqlException e)
+            catch (SqlException)
             {
-                Console.WriteLine($"Error: {e.Message}");
+                throw;
             }
         }
     }
