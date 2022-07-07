@@ -11,7 +11,7 @@ namespace ClinicaSorrisoEntity.Services
 
         public ConsultaService()
         {
-           _consultaDAO =  new ConsultaDAO();
+            _consultaDAO = new ConsultaDAO();
         }
 
         public Paciente ConsultarPacientePorCPF(string cpf)
@@ -19,7 +19,7 @@ namespace ClinicaSorrisoEntity.Services
             try
             {
                 return _consultaDAO.ListarPacientes().Where(p => p.Cpf == cpf)
-                                                 .SingleOrDefault();
+                                                     .SingleOrDefault();
             }
             catch (SqlException)
             {
@@ -59,8 +59,8 @@ namespace ClinicaSorrisoEntity.Services
             try
             {
                 return _consultaDAO.ListarConsulta()
-                               .OrderBy(c => c.Data)
-                               .ToList();
+                                   .OrderBy(c => c.Data)
+                                   .ToList();
             }
             catch (SqlException)
             {
@@ -74,8 +74,8 @@ namespace ClinicaSorrisoEntity.Services
             try
             {
                 return _consultaDAO.ListarConsulta()
-                               .Where(c => c.Data.Date == dataAgendamento.Date)
-                               .ToList();
+                                   .Where(c => c.Data.Date == dataAgendamento.Date)
+                                   .ToList();
             }
             catch (SqlException)
             {
@@ -89,7 +89,7 @@ namespace ClinicaSorrisoEntity.Services
             var consultasDoDia = ListarConsultasDoDia(novaConsulta.Data);
             foreach (var consulta in consultasDoDia)
             {
-                if (VerificaSeTemConflito(novaConsulta,consulta))
+                if (VerificaSeTemConflito(novaConsulta, consulta))
                 {
                     return true;
                 }
@@ -112,9 +112,9 @@ namespace ClinicaSorrisoEntity.Services
             try
             {
                 return _consultaDAO.ListarConsulta()
-                               .Where(consulta => (consulta.Data.Date >= dtInicio.Date) &
+                                   .Where(consulta => (consulta.Data.Date >= dtInicio.Date) &
                                                    consulta.Data.Date <= dtFim.Date)
-                               .ToList();
+                                   .ToList();
             }
             catch (SqlException)
             {
@@ -128,10 +128,10 @@ namespace ClinicaSorrisoEntity.Services
             try
             {
                 return _consultaDAO.ListarConsulta()
-                               .Where(c => c.Paciente.Cpf == consulta.Paciente.Cpf &
-                               c.Data.Date == consulta.Data.Date &
-                               c.HoraInicio == consulta.HoraInicio)
-                               .SingleOrDefault();
+                                   .Where(c => c.Paciente.Cpf == consulta.Paciente.Cpf &
+                                   c.Data.Date == consulta.Data.Date &
+                                   c.HoraInicio == consulta.HoraInicio)
+                                   .SingleOrDefault();
             }
             catch (SqlException)
             {

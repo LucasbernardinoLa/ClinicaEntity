@@ -67,8 +67,8 @@ namespace ClinicaSorrisoEntity.Services
             try
             {
                 return _pacientesDAO.ListarPacientes()
-                       .Where(p => p.Cpf == cpf)
-                       .SingleOrDefault();
+                                    .Where(p => p.Cpf == cpf)
+                                    .SingleOrDefault();
             }
             catch (SqlException)
             {

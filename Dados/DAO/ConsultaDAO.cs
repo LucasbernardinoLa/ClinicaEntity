@@ -46,11 +46,11 @@ namespace ClinicaSorrisoEntity.Dados.DAO
         }
 
         // Retorna uma lista com todas as consultas da base de consultas
-        public IList<Consulta> ListarConsulta()
+        public IEnumerable<Consulta> ListarConsulta()
         {
             try
             {
-                return _contexto.Consultas.ToList();
+                return _contexto.Consultas.ToList().AsParallel();
             }
             catch (SqlException)
             {
@@ -58,11 +58,11 @@ namespace ClinicaSorrisoEntity.Dados.DAO
             }
         }
 
-        public IList<Paciente> ListarPacientes()
+        public IEnumerable<Paciente> ListarPacientes()
         {
             try
             {
-                return _contexto.Pacientes.ToList();
+                return _contexto.Pacientes.ToList().AsParallel();
             }
             catch (SqlException)
             {

@@ -35,11 +35,11 @@ namespace ClinicaSorrisoEntity.Dados.DAO
         }
 
         // Retorna uma lista com dos os pacientes da base de pacientes
-        public IList<Paciente> ListarPacientes()
+        public IEnumerable<Paciente> ListarPacientes()
         {
             try
             {
-                return _contexto.Pacientes.ToList();
+                return _contexto.Pacientes.ToList().AsParallel();
             }
             catch(SqlException)
             {

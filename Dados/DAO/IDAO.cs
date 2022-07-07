@@ -6,6 +6,6 @@ namespace ClinicaSorrisoEntity.Dados.DAO
     // Interface do repositório de dados
     public interface IDAO
     {
-        IList<Paciente> ListarPacientes();
+        IEnumerable<Paciente> ListarPacientes();
     }
 }
